@@ -1,0 +1,44 @@
+server:
+  port: 9080
+spring:
+  output.ansi.enabled: ALWAYS
+  application.name: message-publisher
+  main:
+    web-application-type: REACTIVE
+    allow-bean-definition-overriding: true
+
+
+  cloud:
+    stream:
+      function:
+        definition: messagePublisher;demoConsumer
+      bindings:
+        messagePublisher-out-0:
+          destination: app-events
+        demoConsumer-in-0:
+          destination: app-events
+          group: demo-group
+
+
+  sleuth:
+    propagation:
+      type:
+        - B3
+        - W3C
+
+
+
+otel:
+  instrumentation:
+    spring-integration:
+      producer:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging.level:
+    com.tng.cloud: DEBUG

@@ -1,0 +1,20 @@
+plugins {
+    id 'org.springframework.boot' version "${springBootVersion}" apply false
+
+}
+rootProject.name = applicationName
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://repo.spring.io/snapshot"
+        }
+        maven {
+            url "https://repo.spring.io/milestone"
+        }
+    }
+}
+include 'messaging-publisher-sleuth'
+

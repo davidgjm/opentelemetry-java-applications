@@ -1,0 +1,48 @@
+plugins {
+    id 'cloud.java-application'
+}
+
+version parent.project.version
+
+
+bootJar {
+    enabled = true
+}
+
+dependencies {
+    implementation "io.cloudevents:cloudevents-http-basic"
+    implementation "io.cloudevents:cloudevents-json-jackson"
+    implementation "io.cloudevents:cloudevents-kafka"
+    implementation "io.cloudevents:cloudevents-spring"
+
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-json'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-logging'
+
+
+    //operations
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    //Messaging
+    implementation 'org.springframework.cloud:spring-cloud-stream'
+    implementation 'org.springframework.cloud:spring-cloud-starter-stream-kafka'
+
+
+    //Observability - OpenTelemetry
+    implementation("org.springframework.cloud:spring-cloud-starter-sleuth") {
+        exclude(module: "org.springframework.cloud", group: "spring-cloud-sleuth-brave")
+    }
+    implementation("org.springframework.cloud:spring-cloud-sleuth-otel-autoconfigure")
+    implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
+
+    //instrumentation
+//    runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-1.0")
+    runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-spring-starter")
+//    runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-spring-web-3.1")
+//    implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-integration-4.1'
+
+
+    //logging
+    implementation("io.opentelemetry:opentelemetry-exporter-logging")
+}

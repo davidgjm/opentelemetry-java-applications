@@ -1,0 +1,7 @@
+= OpenTelemetry with Spring Cloud Sleuth
+
+== To do
+
+- [ ] Message sent as CloudEvents not properly instrumented with Spring Cloud Sleuth
+- [ ] Need to find out how to integrate Spring Integration 4.1 from `io.opentelemetry.instrumentation:opentelemetry-spring-integration-4.1`
+- [ ] enhancement needed. `io.opentelemetry.instrumentation:opentelemetry-spring-starter` has to be included for tranceparent included as http header.

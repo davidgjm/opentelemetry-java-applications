@@ -1,0 +1,26 @@
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'idea'
+    apply plugin: 'cloud.library-conventions'
+    dependencyManagement {
+        imports {
+            mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            mavenBom "org.springframework.cloud:spring-cloud-sleuth-otel-dependencies:${springCloudSleuthOtel}"
+
+            //CloudEvents
+            mavenBom "io.cloudevents:cloudevents-bom:${cloudEventsSdkVersion}"
+
+            //OpenTelemetry
+            mavenBom "io.opentelemetry:opentelemetry-bom:${otelVersion}"
+            mavenBom "io.opentelemetry:opentelemetry-bom-alpha:${otelVersionAlpha}"
+            mavenBom "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${otelVersionAlpha}"
+        }
+        dependencies {
+            dependency ("commons-io:commons-io:${commonsIoVersion}")
+        }
+    }
+
+}
