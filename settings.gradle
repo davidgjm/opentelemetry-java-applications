@@ -17,4 +17,5 @@ dependencyResolutionManagement {
     }
 }
 include 'messaging-publisher-sleuth'
+include 'messaging-publisher-otel'
 

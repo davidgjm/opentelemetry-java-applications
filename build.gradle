@@ -1,4 +1,3 @@
-
 subprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
@@ -19,8 +18,13 @@ subprojects {
             mavenBom "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${otelVersionAlpha}"
         }
         dependencies {
-            dependency ("commons-io:commons-io:${commonsIoVersion}")
+            dependency("commons-io:commons-io:${commonsIoVersion}")
+            dependency("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:${otelVersionAlpha}")
         }
     }
 
+    dependencies {
+        implementation platform("io.opentelemetry:opentelemetry-bom-alpha:${otelVersionAlpha}")
+        implementation platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${otelVersionAlpha}")
+    }
 }
