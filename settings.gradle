@@ -2,7 +2,8 @@ plugins {
     id 'org.springframework.boot' version "${springBootVersion}" apply false
 
 }
-rootProject.name = applicationName
+//rootProject.name = applicationName
+rootProject.name = 'otel-java-use-cases'
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
@@ -18,4 +19,7 @@ dependencyResolutionManagement {
 }
 include 'messaging-publisher-sleuth'
 include 'messaging-publisher-otel'
+include 'services:service-product'
+include 'services:service-order'
+include 'web-auto-instrumentation'
 

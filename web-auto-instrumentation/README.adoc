@@ -1,0 +1,149 @@
+= Auto Instrumentation with OpenTelemetry Java Agent
+:toc:
+
+== Setting up Java Agent
+The Java agent from OpenTelemetry can be added to Java application for auto instrumentation. Next to zero configuration is required in your Spring Boot Application. There are two ways to configure the Java Agent.
+
+=== Approach 1 - through java command line arguments
+You can attach the agent as a Java command argument to your bootstrap jar file like Spring Boot fat jar.
+
+[source, bash]
+----
+java -javaagent:/Users/david/otel/agents/opentelemetry-javaagent-1.13.0.jar -jar myapp.jar
+----
+
+However, this approach only applies when you start your application from command line. The second approach is more flexible and can be applied in multiple runtime environments.
+
+=== Approach 2 - through environment variable
+You can use the environment variable `JAVA_TOOL_OPTIONS=-javaagent:${ABSOLUTE_AGENT_PATH}` to configure the java agent. This approach can be used for docker/Kubernetes applications. See examples below:
+
+==== shell script
+[source,bash]
+----
+export JAVA_TOOL_OPTIONS=-javaagent:/Users/david/otel/agents/opentelemetry-javaagent-1.13.0.jar
+----
+
+==== Kubernetes container environment variable
+[source,yaml]
+----
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: online-shopping
+spec:
+  initContainers:
+    - name: otel
+      image: busybox:1.35
+      env:
+        - name: OTEL_AGENT_VERSION
+          value: 1.14.0
+      command: [ "/bin/sh", "-c" ]
+      args:
+        - >-
+          DEST_DIR=/data/observability/agent;
+          AGENT_VER=v$(OTEL_AGENT_VERSION);
+          AGENT_FILE=opentelemetry-javaagent.jar;
+          mkdir -p ${DEST_DIR};
+          if [ ! -f ${DEST_DIR}/${AGENT_FILE} ];
+          then wget --no-check-certificate -P ${DEST_DIR} https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/${AGENT_VER}/${AGENT_FILE};
+          fi
+      volumeMounts:
+        - name: observability-agent
+          mountPath: /data/observability/agent
+  containers:
+    - name: app
+      image: online-shopping:latest
+      env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "dev"
+        - name: JAVA_TOOL_OPTIONS
+          value: -javaagent:/data/observability/agent/opentelemetry-javaagent.jar
+      volumeMounts:
+        - name: observability-agent
+          mountPath: /data/observability/agent
+      ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+  volumes:
+    - name: observability-agent
+      emptyDir: {}
+----
+
+== Injecting `trace_id`,`span_id`,`trace_flags` and application name in logs (*MDC*)
+
+WARNING: this section assumes Spring Cloud Sleuth is *not* added as a dependency. Only OpenTelemetry Java SDKs are used.
+
+
+IMPORTANT: This setting assumes you're using *logback* as the logging backend library.
+
+With OpenTelemetry Java agent, little configuration is needed for your Spring application.
+
+=== Enabling MDC support
+
+Add the following dependency to your runtime will enable OpenTelemetry to inject trace context into MDC. The following dependency needs to be added to your project `build.gradle`
+
+.build.gradle (snippet)
+[source,groovy]
+----
+dependencies {
+    runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0")
+}
+----
+
+.build.gradle (complete)
+[source,groovy]
+----
+include::build.gradle[]
+----
+
+=== Print trace context in log entries
+You need to do 2 things to make this happen:
+
+. Add logback custom configuration so that the OpenTelemetry provided appender can be used instead of the default one: `io.opentelemetry.instrumentation.logback.v1_0.OpenTelemetryAppender`
+. Define the logging pattern in your `application.yml`
+
+==== Add custom logback configuration
+
+The filename needs to be `logback-spring.xml` so that the configuration can be picked up correctly by Spring framework.
+The following file logback-spring.xml` can be used as a template.
+
+.logback-spring.xml
+[source,xml]
+----
+include::src/main/resources/logback-spring.xml[]
+----
+
+==== Define your log pattern to include trace context in log entries
+You can define the log pattern in the above xml. But a more flexible approach would be to add it to your application configuration.
+
+IMPORTANT: Please note `${spring.application.name:-}` in the log pattern below outputs your application name. It can get the application name from Spring application configuration context directly.
+
+.snippet from `application.yml`
+[source,yaml]
+----
+logging:
+  pattern:
+    dateformat: yyyy-MM-dd'T'HH:mm:ss.SSSXXX,UTC
+    console: "%clr(%d{${logging.pattern.dateformat}}){faint} %clr(%5p) %clr([%X{trace_id},%X{span_id},%X{trace_flags}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.20t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"
+
+----
+
+.application.yml
+[source,yaml]
+----
+include::src/main/resources/application.yml[]
+----
+
+==== Example output
+
+.Example log output
+[source,shell]
+----
+2022-05-19T14:07:09.332Z  INFO [web-auto-instrumentation,,,] 20266 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 13 endpoint(s) beneath base path '/actuator'
+2022-05-19T14:07:10.283Z  INFO [web-auto-instrumentation,,,] 20266 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port 8080
+2022-05-19T14:07:10.297Z  INFO [web-auto-instrumentation,,,] 20266 --- [           main] com.tng.cloud.OtelWebApplication         : Started OtelWebApplication in 4.302 seconds (JVM running for 7.198)
+2022-05-19T14:07:20.553Z  INFO [web-auto-instrumentation,0c16ae424d921b75bae7790213ba4359,437bff031ccfa2be,01] 20266 --- [boundedElastic-1] c.t.c.e.p.application.ProductController  : Creating new product with data ProductCreationRequest(name=Refined Granite Sausages, price=485)
+2022-05-19T14:07:20.559Z  INFO [web-auto-instrumentation,0c16ae424d921b75bae7790213ba4359,437bff031ccfa2be,01] 20266 --- [boundedElastic-1] c.t.c.e.p.d.service.ProductServiceImpl   : Creating product Refined Granite Sausages with price=485
+
+----

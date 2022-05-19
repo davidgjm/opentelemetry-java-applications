@@ -23,8 +23,15 @@ subprojects {
         }
     }
 
-    dependencies {
-        implementation platform("io.opentelemetry:opentelemetry-bom-alpha:${otelVersionAlpha}")
-        implementation platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${otelVersionAlpha}")
+//    dependencies {
+//        implementation platform("io.opentelemetry:opentelemetry-bom-alpha:${otelVersionAlpha}")
+//        implementation platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${otelVersionAlpha}")
+//    }
+}
+
+tasks.register('showRepos') {
+    doLast {
+        println "All repos:"
+        println repositories.collect { it.name }
     }
 }
