@@ -5,18 +5,6 @@ plugins {
 //rootProject.name = applicationName
 rootProject.name = 'otel-java-use-cases'
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
-    repositories {
-        mavenCentral()
-        maven {
-            url "https://repo.spring.io/snapshot"
-        }
-        maven {
-            url "https://repo.spring.io/milestone"
-        }
-    }
-}
 include 'messaging-publisher-sleuth'
 include 'messaging-publisher-otel'
 include 'services:service-product'

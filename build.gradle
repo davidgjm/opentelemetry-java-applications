@@ -31,7 +31,8 @@ subprojects {
 
 tasks.register('showRepos') {
     doLast {
-        println "All repos:"
-        println repositories.collect { it.name }
+         repositories.each {
+             println "repository: ${it.name} ('${it.url}')"
+         }
     }
 }
